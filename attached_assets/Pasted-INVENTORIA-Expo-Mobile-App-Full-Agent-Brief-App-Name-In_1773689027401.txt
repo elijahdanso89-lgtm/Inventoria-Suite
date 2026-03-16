@@ -1,0 +1,128 @@
+INVENTORIA — Expo Mobile App — Full Agent Brief
+
+App Name: Inventoria
+Founder: Elijah Danso
+Platform: Expo (React Native)
+No authentication required. No demo/seed data on first launch.
+
+Data Storage
+All data lives on-device using AsyncStorage (the React Native equivalent of localStorage). No backend database.
+
+Storage keys:
+
+Products → inventoria_products_v1
+Sales → inventoria_sales_v1
+Data Models
+Product:
+
+id: number (Date.now())
+name: string (required)
+description: string | null (optional)
+category: string | null (optional)
+costPrice: string (numeric)
+sellingPrice: string (numeric)
+quantity: number
+lowStockThreshold: number (default: 5)
+imageUrl: string | null (optional)
+createdAt: Date
+Sale:
+
+id: number (Date.now())
+productId: number (FK to product)
+quantity: number
+totalPrice: string (numeric)
+profit: string (numeric)
+timestamp: Date
+Core Business Logic
+Create Sale:
+
+Find product by productId
+Check product.quantity >= sale.quantity (throw error if not)
+totalPrice = sellingPrice * quantity
+profit = totalPrice - (costPrice * quantity)
+Deduct quantity from product stock
+Save sale to AsyncStorage
+Analytics (computed from stored data):
+
+totalRevenue = sum of all sale.totalPrice
+totalProfit = sum of all sale.profit
+totalStockValue = sum of product.costPrice * product.quantity
+todaysSales = revenue from sales since midnight today
+salesTrend = last 30 days grouped by date (revenue + profit per day)
+topProducts = top 5 by profit
+poorProducts = products with profit < 10 or quantity sold < 2
+Low stock alert: show warning when product.quantity <= product.lowStockThreshold
+
+Profit display: green if profit ≥ 0, red if profit < 0
+
+Currency Support
+Support: GHS (₵), USD ($), EUR (€), GBP (£)
+
+Store selected currency in AsyncStorage
+Apply currency symbol in all price displays
+Default: GHS
+Screens / Pages
+Dashboard — summary cards (revenue, profit, stock value, today's sales), 30-day sales trend chart, top products list, low stock alerts
+Inventory — list of all products with search, stock badges (Out of Stock / Low Stock), profit per unit; Quick Add + full Add Product forms
+Sales — record a new sale by selecting product + quantity + optional discount; list of past sales
+Insights / Analytics — charts (revenue trend, product performance), top and poor performers
+Quick Add Feature
+A prominent "Quick Add" button (lightning bolt icon, amber/yellow color) that opens a minimal form with only:
+
+Product Name (required)
+Category (optional)
+Quantity (required)
+Cost Price (required)
+Selling Price (required)
+Defaults: lowStockThreshold = 5, description = ""
+Full "Add Product" form includes all fields including description, image URL, and low stock threshold.
+
+Gamification Achievements
+Unlocked based on sales milestones. Store in AsyncStorage:
+
+🎯 First Sale — recorded first sale
+🏆 Power Seller — 10+ sales
+⚡ Hot Streak — 5+ sales in one day
+💰 Grand Master — ₵1000+ total revenue
+Show a badge/toast when a new achievement is unlocked.
+
+Python Flask AI Backend (Optional Smart Features)
+The backend runs at http://localhost:5001 (or the deployed URL). Express proxies it via /api/smart-*. In the mobile app, call these from your backend URL directly.
+
+Endpoints:
+
+Endpoint	Method	Description
+GET /api/health	GET	Health check → {status, app, time}
+POST /api/smart-sale	POST	Log a sale + get AI note → {success, sale, ai_note, total_sales}
+GET /api/live-stats	GET	Today's stats + weekly trend + AI motivational tip
+GET /api/achievements	GET	Unlocked achievements + next goal
+GET /api/daily-report	GET	AI-generated 3-point daily business report
+GET /api/activity-feed	GET	Last 10 sale events + recent achievements
+GET /api/sales	GET	All smart-sale records
+POST /api/smart-sale body:
+
+{
+  "item": "Product Name",
+  "price": 25.00,
+  "quantity": 2,
+  "currency": "GHS"
+}
+Returns an ai_note string with a business insight (powered by Gemini API if GEMINI_API_KEY is set, otherwise a fallback message).
+
+Currency conversion rates used by the backend:
+
+GHS = 1.0 (base)
+USD = 12.5
+EUR = 13.8
+GBP = 15.2
+UI Style Guidelines
+Clean, modern, mobile-first
+Use NativeWind or StyleSheet
+Primary color: blue (#2563eb)
+Quick Add button: amber/yellow (#f59e0b)
+Cards with subtle shadows and rounded corners
+Profit positive → green, profit negative → red
+Low stock → orange badge with pulse indicator
+Out of stock → red badge
+
+Make, test, iterate…
