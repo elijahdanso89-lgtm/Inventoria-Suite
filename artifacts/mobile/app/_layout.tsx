@@ -14,7 +14,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { InventoryContextProvider } from "@/context/InventoryContext";
+import { AppContextProvider } from "@/context/AppContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -25,35 +25,34 @@ function RootLayoutNav() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen
-        name="item/[id]"
-        options={{
-          headerShown: false,
-          presentation: "card",
-        }}
+        name="product/[id]"
+        options={{ headerShown: false, animation: "slide_from_right" }}
       />
       <Stack.Screen
-        name="item/new"
-        options={{
-          headerShown: false,
-          presentation: "modal",
-        }}
+        name="product/new"
+        options={{ headerShown: false, presentation: "modal" }}
       />
       <Stack.Screen
-        name="item/edit/[id]"
-        options={{
-          headerShown: false,
-          presentation: "modal",
-        }}
+        name="product/edit/[id]"
+        options={{ headerShown: false, presentation: "modal" }}
       />
       <Stack.Screen
-        name="item/adjust/[id]"
+        name="product/quickadd"
         options={{
           presentation: "formSheet",
-          sheetAllowedDetents: [0.6],
+          sheetAllowedDetents: [0.7],
           sheetGrabberVisible: true,
           contentStyle: { backgroundColor: "transparent" },
           headerShown: false,
         }}
+      />
+      <Stack.Screen
+        name="sale/new"
+        options={{ headerShown: false, presentation: "modal" }}
+      />
+      <Stack.Screen
+        name="settings"
+        options={{ headerShown: false, presentation: "modal" }}
       />
     </Stack>
   );
@@ -79,13 +78,13 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
-          <InventoryContextProvider>
+          <AppContextProvider>
             <GestureHandlerRootView style={{ flex: 1 }}>
               <KeyboardProvider>
                 <RootLayoutNav />
               </KeyboardProvider>
             </GestureHandlerRootView>
-          </InventoryContextProvider>
+          </AppContextProvider>
         </QueryClientProvider>
       </ErrorBoundary>
     </SafeAreaProvider>

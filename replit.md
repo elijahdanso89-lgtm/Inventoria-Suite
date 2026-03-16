@@ -50,6 +50,34 @@ Every package extends `tsconfig.base.json` which sets `composite: true`. The roo
 
 ## Packages
 
+### `artifacts/mobile` (`@workspace/mobile`)
+
+**Inventoria** — Expo React Native mobile app for small business inventory and profit tracking.
+
+- **Framework**: Expo SDK 54, Expo Router 6 (file-based navigation)
+- **State**: `@nkzw/create-context-hook` — `AppContextProvider` + `useApp()` at `context/AppContext.tsx`
+- **Storage**: `@react-native-async-storage/async-storage` for local persistence
+- **Charts**: `react-native-gifted-charts` (BarChart, LineChart)
+- **Currency**: GHS (₵) default, supports USD/EUR/GBP — symbol from `CURRENCY_SYMBOLS`
+- **Tab navigation**: `expo-router` Tabs (ClassicTabLayout) with BlurView on iOS; NativeTabs with Liquid Glass on iOS 26+
+- **Fonts**: `@expo-google-fonts/inter` — Inter 400/500/600/700
+
+**Key screens:**
+- `app/(tabs)/index.tsx` — Dashboard (stat cards, 14-day bar chart, top products, low stock alerts)
+- `app/(tabs)/inventory.tsx` — Inventory list (search, filter, FABs for Quick Add + Add)
+- `app/(tabs)/sales.tsx` — Sales history with summary header
+- `app/(tabs)/insights.tsx` — Line chart, top/poor performers, achievements
+- `app/product/new.tsx` — Add product form
+- `app/product/edit/[id].tsx` — Edit product form
+- `app/product/[id].tsx` — Product detail with sales history
+- `app/product/quickadd.tsx` — Quick Add sheet (amber FAB)
+- `app/sale/new.tsx` — Record sale modal
+- `app/settings.tsx` — Currency picker + data management
+
+**Achievements:** first_sale, power_seller, hot_streak, grand_master — shown in Insights tab with animated toast.
+
+**Note:** `createContextHook` from `@nkzw/create-context-hook` returns `[Provider, useHook]` (Provider first, hook second). The destructuring in `AppContext.tsx` must be `[AppContextProvider, useApp]`.
+
 ### `artifacts/api-server` (`@workspace/api-server`)
 
 Express 5 API server. Routes live in `src/routes/` and use `@workspace/api-zod` for request and response validation and `@workspace/db` for persistence.

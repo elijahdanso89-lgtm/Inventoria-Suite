@@ -1,39 +1,28 @@
-const primary = "#1E3A5F";
-const accent = "#F5A623";
-const success = "#2ECC71";
-const warning = "#F39C12";
-const danger = "#E74C3C";
-const info = "#3498DB";
+export const Colors = {
+  primary: "#2563eb",
+  primaryDark: "#1d4ed8",
+  primaryLight: "#dbeafe",
+  accent: "#f59e0b",
+  accentLight: "#fef3c7",
+  success: "#16a34a",
+  successLight: "#dcfce7",
+  danger: "#dc2626",
+  dangerLight: "#fee2e2",
+  warning: "#ea580c",
+  warningLight: "#ffedd5",
 
-export default {
-  light: {
-    primary,
-    accent,
-    success,
-    warning,
-    danger,
-    info,
-    text: "#0F1923",
-    textSecondary: "#6B7C93",
-    textTertiary: "#A0AEBF",
-    background: "#F7F9FC",
-    surface: "#FFFFFF",
-    surfaceSecondary: "#EEF2F7",
-    border: "#E2E8F0",
-    borderLight: "#F0F4F8",
-    tint: primary,
-    tabIconDefault: "#A0AEBF",
-    tabIconSelected: primary,
+  text: "#111827",
+  textSecondary: "#6b7280",
+  textTertiary: "#9ca3af",
+  background: "#f1f5f9",
+  surface: "#ffffff",
+  surfaceSecondary: "#f8fafc",
+  border: "#e2e8f0",
+  borderLight: "#f1f5f9",
 
-    categoryColors: {
-      electronics: "#6C63FF",
-      clothing: "#FF6B9D",
-      food: "#4CAF50",
-      tools: "#FF9800",
-      furniture: "#795548",
-      sports: "#00BCD4",
-      books: "#9C27B0",
-      other: "#607D8B",
-    },
-  },
+  tint: "#2563eb",
+  tabIconDefault: "#9ca3af",
+  tabIconSelected: "#2563eb",
 };
+
+export default Colors;

@@ -3,7 +3,7 @@ import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Tabs } from "expo-router";
 import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
 import { SymbolView } from "expo-symbols";
-import { Feather } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Platform, StyleSheet, View, useColorScheme } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -14,61 +14,66 @@ function NativeTabLayout() {
   return (
     <NativeTabs>
       <NativeTabs.Trigger name="index">
-        <Icon sf={{ default: "cube.box", selected: "cube.box.fill" }} />
-        <Label>Inventory</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="dashboard">
         <Icon sf={{ default: "chart.bar", selected: "chart.bar.fill" }} />
         <Label>Dashboard</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="alerts">
-        <Icon sf={{ default: "bell", selected: "bell.fill" }} />
-        <Label>Alerts</Label>
+      <NativeTabs.Trigger name="inventory">
+        <Icon sf={{ default: "cube.box", selected: "cube.box.fill" }} />
+        <Label>Inventory</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="sales">
+        <Icon sf={{ default: "cart", selected: "cart.fill" }} />
+        <Label>Sales</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="insights">
+        <Icon sf={{ default: "lightbulb", selected: "lightbulb.fill" }} />
+        <Label>Insights</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
 }
 
 function ClassicTabLayout() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === "dark";
+  const isDark = useColorScheme() === "dark";
   const isIOS = Platform.OS === "ios";
   const isWeb = Platform.OS === "web";
-  const safeAreaInsets = useSafeAreaInsets();
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors.light.primary,
-        tabBarInactiveTintColor: Colors.light.tabIconDefault,
+        tabBarActiveTintColor: Colors.primary,
+        tabBarInactiveTintColor: Colors.tabIconDefault,
         tabBarStyle: {
           position: "absolute",
-          backgroundColor: isIOS ? "transparent" : isDark ? "#0F1923" : "#FFFFFF",
+          backgroundColor: isIOS ? "transparent" : "#fff",
           borderTopWidth: isWeb ? 1 : 0,
-          borderTopColor: isDark ? "#333" : Colors.light.border,
+          borderTopColor: Colors.border,
           elevation: 0,
           ...(isWeb ? { height: 84 } : {}),
         },
         tabBarBackground: () =>
           isIOS ? (
-            <BlurView
-              intensity={100}
-              tint={isDark ? "dark" : "light"}
-              style={StyleSheet.absoluteFill}
-            />
+            <BlurView intensity={100} tint="light" style={StyleSheet.absoluteFill} />
           ) : isWeb ? (
-            <View
-              style={[
-                StyleSheet.absoluteFill,
-                { backgroundColor: isDark ? "#0F1923" : "#FFFFFF" },
-              ]}
-            />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: "#fff" }]} />
           ) : null,
       }}
     >
       <Tabs.Screen
         name="index"
+        options={{
+          title: "Dashboard",
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="chart.bar.fill" tintColor={color} size={24} />
+            ) : (
+              <Ionicons name="bar-chart-outline" size={22} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="inventory"
         options={{
           title: "Inventory",
           tabBarIcon: ({ color }) =>
@@ -80,26 +85,26 @@ function ClassicTabLayout() {
         }}
       />
       <Tabs.Screen
-        name="dashboard"
+        name="sales"
         options={{
-          title: "Dashboard",
+          title: "Sales",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="chart.bar" tintColor={color} size={24} />
+              <SymbolView name="cart" tintColor={color} size={24} />
             ) : (
-              <Feather name="bar-chart-2" size={22} color={color} />
+              <Feather name="shopping-cart" size={22} color={color} />
             ),
         }}
       />
       <Tabs.Screen
-        name="alerts"
+        name="insights"
         options={{
-          title: "Alerts",
+          title: "Insights",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="bell" tintColor={color} size={24} />
+              <SymbolView name="lightbulb" tintColor={color} size={24} />
             ) : (
-              <Feather name="bell" size={22} color={color} />
+              <Feather name="trending-up" size={22} color={color} />
             ),
         }}
       />
@@ -108,8 +113,6 @@ function ClassicTabLayout() {
 }
 
 export default function TabLayout() {
-  if (isLiquidGlassAvailable()) {
-    return <NativeTabLayout />;
-  }
+  if (isLiquidGlassAvailable()) return <NativeTabLayout />;
   return <ClassicTabLayout />;
 }
