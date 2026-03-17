@@ -41,6 +41,13 @@ function StatCard({
   );
 }
 
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
+}
+
 export default function DashboardScreen() {
   const insets = useSafeAreaInsets();
   const {
@@ -54,6 +61,8 @@ export default function DashboardScreen() {
     lowStockProducts,
     newAchievement,
     clearNewAchievement,
+    userName,
+    businessName,
   } = useApp();
 
   const topProducts = useMemo(() => {
@@ -93,9 +102,15 @@ export default function DashboardScreen() {
 
       {/* Header */}
       <View style={[styles.header, { paddingTop: topInset + 12 }]}>
-        <View>
-          <Text style={styles.headerGreeting}>Good day 👋</Text>
-          <Text style={styles.headerTitle}>Dashboard</Text>
+        <View style={styles.headerLeft}>
+          <Text style={styles.headerGreeting}>
+            {getGreeting()}{userName ? `, ${userName}` : ""} 👋
+          </Text>
+          {businessName ? (
+            <Text style={styles.headerBusiness}>{businessName}</Text>
+          ) : (
+            <Text style={styles.headerTitle}>Dashboard</Text>
+          )}
         </View>
         <TouchableOpacity
           style={styles.settingsBtn}
@@ -283,6 +298,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
+  headerLeft: { flex: 1 },
   headerGreeting: {
     fontSize: 13,
     color: Colors.textSecondary,
@@ -290,6 +306,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 24,
+    fontFamily: "Inter_700Bold",
+    color: Colors.text,
+    marginTop: 2,
+  },
+  headerBusiness: {
+    fontSize: 22,
     fontFamily: "Inter_700Bold",
     color: Colors.text,
     marginTop: 2,

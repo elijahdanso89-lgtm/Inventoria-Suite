@@ -56,6 +56,7 @@ const PRODUCTS_KEY = "inventoria_products_v1";
 const SALES_KEY = "inventoria_sales_v1";
 const CURRENCY_KEY = "inventoria_currency_v1";
 const ACHIEVEMENTS_KEY = "inventoria_achievements_v1";
+const PROFILE_KEY = "inventoria_profile_v1";
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 
@@ -66,6 +67,9 @@ type AppContextType = {
   achievements: Achievement[];
   newAchievement: Achievement | null;
   isLoading: boolean;
+  userName: string;
+  businessName: string;
+  setProfile: (userName: string, businessName: string) => void;
   addProduct: (p: Omit<Product, "id" | "createdAt">) => void;
   updateProduct: (id: number, p: Partial<Product>) => void;
   deleteProduct: (id: number, deleteSales?: boolean) => void;
@@ -87,6 +91,8 @@ const [AppContextProvider, useApp] = createContextHook<AppContextType>(() => {
   const [achievements, setAchievements] = useState<Achievement[]>(ACHIEVEMENTS_DEF);
   const [newAchievement, setNewAchievement] = useState<Achievement | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [userName, setUserName] = useState("");
+  const [businessName, setBusinessName] = useState("");
 
   const salesRef = useRef(sales);
   salesRef.current = sales;
@@ -99,22 +105,34 @@ const [AppContextProvider, useApp] = createContextHook<AppContextType>(() => {
 
   const loadAll = async () => {
     try {
-      const [pRaw, sRaw, cRaw, aRaw] = await Promise.all([
+      const [pRaw, sRaw, cRaw, aRaw, profRaw] = await Promise.all([
         AsyncStorage.getItem(PRODUCTS_KEY),
         AsyncStorage.getItem(SALES_KEY),
         AsyncStorage.getItem(CURRENCY_KEY),
         AsyncStorage.getItem(ACHIEVEMENTS_KEY),
+        AsyncStorage.getItem(PROFILE_KEY),
       ]);
       if (pRaw) setProducts(JSON.parse(pRaw));
       if (sRaw) setSales(JSON.parse(sRaw));
       if (cRaw) setCurrencyState(JSON.parse(cRaw));
       if (aRaw) setAchievements(JSON.parse(aRaw));
+      if (profRaw) {
+        const prof = JSON.parse(profRaw);
+        if (prof.userName) setUserName(prof.userName);
+        if (prof.businessName) setBusinessName(prof.businessName);
+      }
     } catch (e) {
       console.error(e);
     } finally {
       setIsLoading(false);
     }
   };
+
+  const setProfile = useCallback((name: string, biz: string) => {
+    setUserName(name);
+    setBusinessName(biz);
+    AsyncStorage.setItem(PROFILE_KEY, JSON.stringify({ userName: name, businessName: biz }));
+  }, []);
 
   const saveProducts = async (p: Product[]) =>
     AsyncStorage.setItem(PRODUCTS_KEY, JSON.stringify(p));
@@ -252,6 +270,9 @@ const [AppContextProvider, useApp] = createContextHook<AppContextType>(() => {
     achievements,
     newAchievement,
     isLoading,
+    userName,
+    businessName,
+    setProfile,
     addProduct,
     updateProduct,
     deleteProduct,

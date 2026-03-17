@@ -3,409 +3,312 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Animated,
   Dimensions,
+  Image,
+  KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useApp } from "../context/AppContext";
 
 const { width } = Dimensions.get("window");
-
 const WELCOME_KEY = "inventoria_welcome_seen_v1";
-
-const FEATURES = [
-  {
-    icon: "package",
-    color: "#2563eb",
-    bg: "#dbeafe",
-    title: "Product Inventory",
-    desc: "Track every product with cost price, selling price, quantity, and low-stock alerts.",
-  },
-  {
-    icon: "trending-up",
-    color: "#16a34a",
-    bg: "#dcfce7",
-    title: "Profit Tracking",
-    desc: "See real profit per unit and total profit across all your sales automatically.",
-  },
-  {
-    icon: "shopping-cart",
-    color: "#f59e0b",
-    bg: "#fef3c7",
-    title: "Sales Recording",
-    desc: "Log sales in seconds with quantity, discount support, and instant stock updates.",
-  },
-  {
-    icon: "bar-chart-2",
-    color: "#7c3aed",
-    bg: "#ede9fe",
-    title: "Insights & Charts",
-    desc: "14-day revenue trends, top performers, and achievement milestones to motivate you.",
-  },
-];
-
-const DEVELOPERS = [
-  {
-    name: "Elijah Danso",
-    role: "Product Lead & Developer",
-    initials: "ED",
-    color: "#2563eb",
-  },
-];
 
 export default function WelcomeScreen() {
   const insets = useSafeAreaInsets();
-  const scrollY = useRef(new Animated.Value(0)).current;
+  const { setProfile, userName, businessName } = useApp();
   const topInset = Platform.OS === "web" ? 67 : insets.top;
+  const bottomInset = Platform.OS === "web" ? 34 : insets.bottom;
 
-  const headerOpacity = scrollY.interpolate({
-    inputRange: [0, 80],
-    outputRange: [1, 0.85],
-    extrapolate: "clamp",
-  });
+  const [name, setName] = useState(userName);
+  const [business, setBusiness] = useState(businessName);
+  const [nameError, setNameError] = useState(false);
+  const [businessError, setBusinessError] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const nameRef = useRef<TextInput>(null);
+  const businessRef = useRef<TextInput>(null);
 
   const handleGetStarted = async () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    let valid = true;
+    if (!name.trim()) { setNameError(true); valid = false; } else setNameError(false);
+    if (!business.trim()) { setBusinessError(true); valid = false; } else setBusinessError(false);
+    if (!valid) return;
+
+    setSaving(true);
+    try {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } catch {}
+    setProfile(name.trim(), business.trim());
     await AsyncStorage.setItem(WELCOME_KEY, "1");
+    setSaving(false);
     router.replace("/(tabs)");
   };
 
   return (
-    <View style={styles.root}>
-      <Animated.ScrollView
-        style={{ flex: 1 }}
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView
+        style={styles.flex}
         contentContainerStyle={[
-          styles.scroll,
-          { paddingTop: topInset + 24, paddingBottom: insets.bottom + 24 },
+          styles.container,
+          { paddingTop: topInset + 16, paddingBottom: bottomInset + 32 },
         ]}
+        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false }
-        )}
-        scrollEventThrottle={16}
       >
-        {/* Hero */}
-        <Animated.View style={[styles.hero, { opacity: headerOpacity }]}>
-          <LinearGradient
-            colors={["#1e3a5f", "#2563eb"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.logoGradient}
-          >
-            <Text style={styles.logoEmoji}>🏪</Text>
-          </LinearGradient>
-
-          <Text style={styles.appName}>Inventoria</Text>
-          <Text style={styles.tagline}>
-            Simple inventory & profit tracking{"\n"}for small business owners
-          </Text>
-
-          <View style={styles.badgeRow}>
-            <View style={styles.badge}>
-              <Feather name="globe" size={12} color="#2563eb" />
-              <Text style={styles.badgeText}>Multi-currency</Text>
-            </View>
-            <View style={styles.badge}>
-              <Feather name="wifi-off" size={12} color="#2563eb" />
-              <Text style={styles.badgeText}>Works offline</Text>
-            </View>
-            <View style={styles.badge}>
-              <Feather name="lock" size={12} color="#2563eb" />
-              <Text style={styles.badgeText}>Private & local</Text>
-            </View>
-          </View>
-        </Animated.View>
-
-        {/* Features */}
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>WHAT YOU GET</Text>
-          <View style={styles.featuresGrid}>
-            {FEATURES.map((f) => (
-              <View key={f.title} style={styles.featureCard}>
-                <View style={[styles.featureIcon, { backgroundColor: f.bg }]}>
-                  <Feather name={f.icon as any} size={22} color={f.color} />
-                </View>
-                <Text style={styles.featureTitle}>{f.title}</Text>
-                <Text style={styles.featureDesc}>{f.desc}</Text>
-              </View>
-            ))}
-          </View>
+        {/* ── Logo image ── */}
+        <View style={styles.logoWrap}>
+          <Image
+            source={require("../assets/images/logo.png")}
+            style={styles.logo}
+            resizeMode="contain"
+          />
         </View>
 
-        {/* About */}
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>ABOUT THE APP</Text>
-          <View style={styles.aboutCard}>
-            <Text style={styles.aboutText}>
-              Inventoria was built for small business owners and street vendors
-              who need a fast, reliable way to manage stock and understand their
-              profit margins — without the complexity of enterprise software.
-            </Text>
-            <View style={styles.aboutDivider} />
-            <Text style={styles.aboutText}>
-              Everything is stored privately on your device. No accounts, no
-              subscriptions, no internet required. Just open the app and start
-              tracking.
-            </Text>
-          </View>
-        </View>
+        {/* ── Tagline ── */}
+        <Text style={styles.tagline}>
+          Inventory & Profit Tracking{"\n"}for Small Businesses
+        </Text>
 
-        {/* Team */}
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>BUILT BY</Text>
-          {DEVELOPERS.map((dev) => (
-            <View key={dev.name} style={styles.devCard}>
-              <View style={[styles.devAvatar, { backgroundColor: dev.color + "22" }]}>
-                <Text style={[styles.devInitials, { color: dev.color }]}>
-                  {dev.initials}
-                </Text>
-              </View>
-              <View style={styles.devInfo}>
-                <Text style={styles.devName}>{dev.name}</Text>
-                <Text style={styles.devRole}>{dev.role}</Text>
-              </View>
-              <View style={[styles.devBadge, { backgroundColor: dev.color + "15" }]}>
-                <Text style={[styles.devBadgeText, { color: dev.color }]}>
-                  v1.0
-                </Text>
-              </View>
+        {/* ── Badge row ── */}
+        <View style={styles.badgeRow}>
+          {[
+            { icon: "globe", label: "Multi-currency" },
+            { icon: "wifi-off", label: "Works offline" },
+            { icon: "lock", label: "Private & local" },
+          ].map((b) => (
+            <View key={b.label} style={styles.badge}>
+              <Feather name={b.icon as any} size={11} color="#2563eb" />
+              <Text style={styles.badgeText}>{b.label}</Text>
             </View>
           ))}
-
-          <Text style={styles.builtWith}>
-            Built with React Native · Expo · AsyncStorage
-          </Text>
         </View>
 
-        {/* CTA */}
-        <View style={styles.ctaSection}>
-          <TouchableOpacity
-            style={styles.ctaButton}
-            onPress={handleGetStarted}
-            activeOpacity={0.85}
+        {/* ── Divider ── */}
+        <View style={styles.divider} />
+
+        {/* ── Form ── */}
+        <Text style={styles.formHeading}>Let's get to know you</Text>
+        <Text style={styles.formSub}>
+          Personalise your experience with your name and business info.
+        </Text>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Your Name</Text>
+          <TextInput
+            ref={nameRef}
+            style={[styles.input, nameError && styles.inputError]}
+            placeholder="e.g. Elijah Danso"
+            placeholderTextColor="#9ca3af"
+            value={name}
+            onChangeText={(t) => { setName(t); if (t.trim()) setNameError(false); }}
+            autoCapitalize="words"
+            returnKeyType="next"
+            onSubmitEditing={() => businessRef.current?.focus()}
+          />
+          {nameError && (
+            <Text style={styles.errorText}>Please enter your name</Text>
+          )}
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Business Name</Text>
+          <TextInput
+            ref={businessRef}
+            style={[styles.input, businessError && styles.inputError]}
+            placeholder="e.g. Danso Electronics"
+            placeholderTextColor="#9ca3af"
+            value={business}
+            onChangeText={(t) => { setBusiness(t); if (t.trim()) setBusinessError(false); }}
+            autoCapitalize="words"
+            returnKeyType="done"
+            onSubmitEditing={handleGetStarted}
+          />
+          {businessError && (
+            <Text style={styles.errorText}>Please enter your business name</Text>
+          )}
+        </View>
+
+        {/* ── CTA ── */}
+        <TouchableOpacity
+          style={styles.ctaButton}
+          onPress={handleGetStarted}
+          activeOpacity={0.85}
+          disabled={saving}
+        >
+          <LinearGradient
+            colors={["#f59e0b", "#d97706"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.ctaGradient}
           >
-            <LinearGradient
-              colors={["#f59e0b", "#d97706"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.ctaGradient}
-            >
-              <Text style={styles.ctaText}>Get Started</Text>
-              <Feather name="arrow-right" size={20} color="#fff" />
-            </LinearGradient>
-          </TouchableOpacity>
-          <Text style={styles.ctaHint}>Your data stays on your device</Text>
+            {saving ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Text style={styles.ctaText}>Get Started</Text>
+                <Feather name="arrow-right" size={20} color="#fff" />
+              </>
+            )}
+          </LinearGradient>
+        </TouchableOpacity>
+        <Text style={styles.ctaHint}>Your data stays on your device only</Text>
+
+        {/* ── Feature pills ── */}
+        <View style={styles.divider} />
+        <View style={styles.pillsRow}>
+          {[
+            { icon: "package", label: "Product Inventory" },
+            { icon: "trending-up", label: "Profit Charts" },
+            { icon: "shopping-cart", label: "Sales Recording" },
+            { icon: "bell", label: "Low Stock Alerts" },
+          ].map((f) => (
+            <View key={f.label} style={styles.pill}>
+              <Feather name={f.icon as any} size={14} color="#2563eb" />
+              <Text style={styles.pillText}>{f.label}</Text>
+            </View>
+          ))}
         </View>
-      </Animated.ScrollView>
-    </View>
+
+        {/* ── Developer card ── */}
+        <View style={styles.devCard}>
+          <View style={styles.devAvatar}>
+            <Text style={styles.devInitials}>ED</Text>
+          </View>
+          <View style={styles.devInfo}>
+            <Text style={styles.devName}>Elijah Danso</Text>
+            <Text style={styles.devRole}>Product Lead & Developer</Text>
+          </View>
+          <View style={styles.versionBadge}>
+            <Text style={styles.versionText}>v1.0</Text>
+          </View>
+        </View>
+        <Text style={styles.builtWith}>
+          Built with React Native · Expo · AsyncStorage
+        </Text>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: "#f8fafc",
-  },
-  scroll: {
-    paddingHorizontal: 20,
-    gap: 32,
+  flex: { flex: 1, backgroundColor: "#f8fafc" },
+
+  container: {
+    paddingHorizontal: 22,
+    alignItems: "center",
   },
 
-  /* Hero */
-  hero: {
-    alignItems: "center",
-    gap: 12,
-    paddingVertical: 8,
+  /* Logo */
+  logoWrap: { marginBottom: 4 },
+  logo: {
+    width: Math.min(width * 0.68, 260),
+    height: Math.min(width * 0.52, 200),
   },
-  logoGradient: {
-    width: 96,
-    height: 96,
-    borderRadius: 26,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 4,
-    shadowColor: "#2563eb",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 10,
-  },
-  logoEmoji: {
-    fontSize: 46,
-  },
-  appName: {
-    fontSize: 36,
-    fontFamily: "Inter_700Bold",
-    color: "#0f172a",
-    letterSpacing: -0.5,
-  },
+
+  /* Tagline */
   tagline: {
-    fontSize: 16,
-    fontFamily: "Inter_400Regular",
-    color: "#64748b",
+    fontSize: 17,
+    fontFamily: "Inter_700Bold",
+    color: "#1e3a5f",
     textAlign: "center",
-    lineHeight: 24,
+    lineHeight: 25,
+    marginBottom: 14,
   },
+
+  /* Badges */
   badgeRow: {
     flexDirection: "row",
-    gap: 8,
     flexWrap: "wrap",
     justifyContent: "center",
-    marginTop: 4,
+    gap: 8,
+    marginBottom: 6,
   },
   badge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
     backgroundColor: "#dbeafe",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 11,
+    paddingVertical: 5,
     borderRadius: 20,
   },
   badgeText: {
-    fontFamily: "Inter_500Medium",
     fontSize: 12,
+    fontFamily: "Inter_600SemiBold",
     color: "#2563eb",
   },
 
-  /* Section */
-  section: { gap: 14 },
-  sectionLabel: {
-    fontFamily: "Inter_700Bold",
-    fontSize: 11,
-    color: "#94a3b8",
-    letterSpacing: 1.2,
-  },
-
-  /* Features */
-  featuresGrid: {
-    gap: 12,
-  },
-  featureCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 16,
-    padding: 16,
-    gap: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  featureIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  featureTitle: {
-    fontFamily: "Inter_700Bold",
-    fontSize: 16,
-    color: "#0f172a",
-  },
-  featureDesc: {
-    fontFamily: "Inter_400Regular",
-    fontSize: 14,
-    color: "#64748b",
-    lineHeight: 21,
-  },
-
-  /* About */
-  aboutCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 16,
-    padding: 18,
-    gap: 14,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  aboutText: {
-    fontFamily: "Inter_400Regular",
-    fontSize: 15,
-    color: "#374151",
-    lineHeight: 23,
-  },
-  aboutDivider: {
+  /* Divider */
+  divider: {
+    width: "100%",
     height: 1,
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#e5e7eb",
+    marginVertical: 20,
   },
 
-  /* Team */
-  devCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 16,
-    padding: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  devAvatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  devInitials: {
+  /* Form */
+  formHeading: {
+    fontSize: 20,
     fontFamily: "Inter_700Bold",
-    fontSize: 18,
+    color: "#111827",
+    alignSelf: "flex-start",
+    marginBottom: 5,
   },
-  devInfo: { flex: 1 },
-  devName: {
-    fontFamily: "Inter_700Bold",
-    fontSize: 16,
-    color: "#0f172a",
-  },
-  devRole: {
+  formSub: {
+    fontSize: 14,
     fontFamily: "Inter_400Regular",
+    color: "#6b7280",
+    alignSelf: "flex-start",
+    lineHeight: 21,
+    marginBottom: 18,
+  },
+  inputGroup: { width: "100%", marginBottom: 14 },
+  label: {
     fontSize: 13,
-    color: "#64748b",
-    marginTop: 2,
+    fontFamily: "Inter_600SemiBold",
+    color: "#374151",
+    marginBottom: 6,
   },
-  devBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-  },
-  devBadgeText: {
-    fontFamily: "Inter_700Bold",
-    fontSize: 12,
-  },
-  builtWith: {
+  input: {
+    width: "100%",
+    height: 52,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: "#d1d5db",
+    paddingHorizontal: 16,
+    fontSize: 15,
     fontFamily: "Inter_400Regular",
+    color: "#111827",
+  },
+  inputError: { borderColor: "#ef4444" },
+  errorText: {
     fontSize: 12,
-    color: "#94a3b8",
-    textAlign: "center",
+    fontFamily: "Inter_400Regular",
+    color: "#ef4444",
     marginTop: 4,
   },
 
   /* CTA */
-  ctaSection: {
-    alignItems: "center",
-    gap: 12,
-    paddingTop: 8,
-  },
   ctaButton: {
     width: "100%",
-    borderRadius: 16,
+    borderRadius: 14,
     overflow: "hidden",
+    marginTop: 6,
     shadowColor: "#f59e0b",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.4,
@@ -417,17 +320,100 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
-    paddingVertical: 18,
-    paddingHorizontal: 24,
+    paddingVertical: 17,
   },
   ctaText: {
     fontFamily: "Inter_700Bold",
-    fontSize: 18,
+    fontSize: 17,
     color: "#fff",
   },
   ctaHint: {
     fontFamily: "Inter_400Regular",
+    fontSize: 12,
+    color: "#9ca3af",
+    marginTop: 8,
+  },
+
+  /* Feature pills */
+  pillsRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    justifyContent: "center",
+    marginBottom: 4,
+  },
+  pill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    paddingHorizontal: 13,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  pillText: {
     fontSize: 13,
-    color: "#94a3b8",
+    fontFamily: "Inter_600SemiBold",
+    color: "#374151",
+  },
+
+  /* Developer card */
+  devCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    padding: 14,
+    marginTop: 20,
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    gap: 12,
+  },
+  devAvatar: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: "#2563eb",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  devInitials: {
+    color: "#fff",
+    fontFamily: "Inter_700Bold",
+    fontSize: 15,
+  },
+  devInfo: { flex: 1 },
+  devName: {
+    fontSize: 15,
+    fontFamily: "Inter_700Bold",
+    color: "#111827",
+  },
+  devRole: {
+    fontSize: 12,
+    fontFamily: "Inter_400Regular",
+    color: "#6b7280",
+    marginTop: 1,
+  },
+  versionBadge: {
+    backgroundColor: "#eff6ff",
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderWidth: 1,
+    borderColor: "#bfdbfe",
+  },
+  versionText: {
+    fontSize: 11,
+    fontFamily: "Inter_700Bold",
+    color: "#2563eb",
+  },
+  builtWith: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 11,
+    color: "#9ca3af",
+    marginTop: 10,
   },
 });
