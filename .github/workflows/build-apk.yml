@@ -1,4 +1,4 @@
-name: Build  Inventoria suite APK
+name: Build Inventoria + APK
 
 on:
   push:
@@ -13,28 +13,38 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install pnpm
+        run: npm install -g pnpm
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: npm install
+        run: pnpm install
 
-      - name: Set up JDK
-        uses: actions/setup-java@v4
+      - name: Build project
+        run: pnpm run build
+
+      - name: Upload website build
+        uses: actions/upload-artifact@v4
         with:
-          distribution: 'zulu'
-          java-version: '17'
+          name: inventoria-website
+          path: build/
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Install Bubblewrap
+        run: npm install -g @bubblewrap/cli
 
-      - name: Build APK
-        run: cd android && ./gradlew assembleRelease
+      - name: Initialize Bubblewrap
+        run: bubblewrap init --manifest=https://inventoria-suite--mabelamoasi996.replit.app/manifest.json
+
+      - name: Build APK (auto-answer No)
+        run: echo "No" | bubblewrap build
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: inventoria-app-release
-          path: android/app/build/outputs/apk/release/app-release.apk
+          name: inventoria-apk
+          path: app/build/outputs/apk/release/app-release.apk
