@@ -1,8 +1,8 @@
-name: Build Inventoria + APK
+name: Build Inventoria APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   workflow_dispatch:
 
 jobs:
@@ -13,33 +13,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install pnpm
-        run: npm install -g pnpm
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Build project
-        run: pnpm run build
-
-      - name: Upload website build
-        uses: actions/upload-artifact@v4
-        with:
-          name: inventoria-website
-          path: build/
-
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
       - name: Initialize Bubblewrap
         run: bubblewrap init --manifest=https://inventoria-suite--mabelamoasi996.replit.app/manifest.json
 
-      - name: Build APK (auto-answer No)
+      - name: Build APK
         run: echo "No" | bubblewrap build
 
       - name: Upload APK
