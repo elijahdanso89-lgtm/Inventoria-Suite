@@ -5,8 +5,9 @@ import {
   Inter_700Bold,
   useFonts,
 } from "@expo-google-fonts/inter";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -20,10 +21,16 @@ SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
 
+const WELCOME_KEY = "inventoria_welcome_seen_v1";
+
 function RootLayoutNav() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="welcome"
+        options={{ headerShown: false, animation: "fade" }}
+      />
       <Stack.Screen
         name="product/[id]"
         options={{ headerShown: false, animation: "slide_from_right" }}
@@ -67,9 +74,11 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
-      SplashScreen.hideAsync();
-    }
+    if (!fontsLoaded && !fontError) return;
+    SplashScreen.hideAsync();
+    AsyncStorage.getItem(WELCOME_KEY).then((seen) => {
+      if (!seen) router.replace("/welcome");
+    });
   }, [fontsLoaded, fontError]);
 
   if (!fontsLoaded && !fontError) return null;

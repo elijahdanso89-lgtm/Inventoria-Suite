@@ -88,6 +88,24 @@ export default function SettingsScreen() {
           </View>
         </View>
 
+        {/* About */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>About</Text>
+          <View style={styles.card}>
+            <TouchableOpacity
+              style={styles.actionRow}
+              onPress={() => {
+                router.back();
+                setTimeout(() => router.push("/welcome"), 100);
+              }}
+            >
+              <Feather name="info" size={18} color={Colors.text} />
+              <Text style={styles.actionText}>About Inventoria</Text>
+              <Feather name="chevron-right" size={18} color={Colors.textTertiary} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* Data */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Data</Text>
